@@ -108,7 +108,6 @@ TEMPLATE_DIRS = (
 )
 
 INSTALLED_APPS = (
-    'grappelli',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -124,12 +123,6 @@ INSTALLED_APPS = (
     'pagination',
     'permissions',
     'dynamic_search',
-    'djcelery',
-    'indexer',
-    'paging',
-    'sentry',
-    'sentry.client',
-    'sentry.client.celery',
     'reminders',
     'user_management',
     'reminder_comments',
@@ -140,7 +133,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
     'django.core.context_processors.request',
-    'grappelli.context_processors.admin_template_path',
 #    'django.contrib.messages.context_processors.messages',
 )
 
@@ -152,25 +144,9 @@ WEB_THEME_THEME = 'djime-cerulean'
 #------------ django-sendfile --------------
 # Change to xsendfile for apache if x-sendfile is enabled
 SENDFILE_BACKEND = 'sendfile.backends.simple'
-#----------- django-celery --------------
-try:
-    import djcelery
-except ImportError:
-    print 'djcelery not found'
-djcelery.setup_loader()
-BROKER_HOST = "localhost"
-BROKER_PORT = 5672
-BROKER_USER = "guest"
-BROKER_PASSWORD = "guest"
-BROKER_VHOST = "/"
-CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 #======== End of user configuration options =======
-#--------- Celery ------------------
-CELERY_DISABLE_RATE_LIMITS = True
 #--------- Web theme ---------------
 WEB_THEME_ENABLE_SCROLL_JS = False
-#--------- Grappelli ----------------
-GRAPPELLI_ADMIN_TITLE = PROJECT_TITLE
 #--------- Pagination ----------------
 PAGINATION_INVALID_PAGE_RAISES_404 = True
 #---------- Search ------------------
