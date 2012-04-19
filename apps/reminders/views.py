@@ -12,6 +12,7 @@ from django.utils import formats
 from django.contrib.auth.models import User
 
 from permissions.api import check_permissions
+from common.utils import encapsulate
 
 from reminders.forms import ReminderForm, ReminderForm_view, \
     ReminderForm_days, FutureDateForm, ParticipantForm_add
@@ -253,7 +254,7 @@ def expired_remider_list(request, expiration_date=datetime.datetime.now().date()
         'extra_columns': [
             {
                 'name': _('days expired'),
-                'attribute': lambda x: (expiration_date - x.datetime_expire).days
+                'attribute': encapsulate(lambda x: (expiration_date - x.datetime_expire).days)
             }
         ]
     }, context_instance=RequestContext(request))

@@ -1,11 +1,12 @@
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.comments.models import Comment
+from django.conf import settings
 
 from navigation.api import register_links, \
     register_model_list_columns
 from permissions.api import register_permission, set_namespace_title
 
-from django.contrib.comments.models import Comment
-from django.conf import settings
+from reminders.models import Reminder
 
 if 'django.contrib.comments' not in settings.INSTALLED_APPS:
     raise Exception('This app depends on the django.contrib.comments app.')
@@ -43,3 +44,4 @@ register_model_list_columns(Comment, [
 
 register_links(['comments_for_object'], [comment_add], menu_name='sidebar')
 register_links(Comment, [comment_delete])
+register_links([Reminder], [comments_for_object], menu_name='form_header')

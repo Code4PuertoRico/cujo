@@ -13,8 +13,8 @@ urlpatterns = patterns('',
     (r'^settings/', include('smart_settings.urls')),
     (r'^permissions/', include('permissions.urls')),
     (r'^reminders/', include('reminders.urls')),
-    #(r'^user_management/', include('user_management.urls')),
-    #(r'^comments/', include('reminder_comments.urls')),
+    (r'^user_management/', include('user_management.urls')),
+    (r'^comments/', include('reminder_comments.urls')),
 )
 
 def handler500(request):

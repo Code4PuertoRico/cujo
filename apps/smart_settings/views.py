@@ -2,7 +2,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.translation import ugettext_lazy as _
 
-from common.utils import exists_with_famfam, return_type
+from common.utils import exists_with_famfam, return_type, encapsulate
 
 from smart_settings.api import settings
 
@@ -27,10 +27,10 @@ def setting_list(request):
         'hide_object': True,
         'extra_columns': [
             {'name': _(u'name'), 'attribute': 'global_name'},
-            {'name': _(u'default'), 'attribute': lambda x: return_type(x['default'])},
-            {'name': _(u'value'), 'attribute': lambda x: return_type(getattr(x['module'], x['name']))},
+            {'name': _(u'default'), 'attribute': encapsulate(lambda x: return_type(x['default']))},
+            {'name': _(u'value'), 'attribute': encapsulate(lambda x: return_type(getattr(x['module'], x['name'])))},
             {'name': _(u'description'), 'attribute': 'description'},
-            {'name': _(u'exists'), 'attribute': lambda x: exists_with_famfam(getattr(x['module'], x['name'])) if x['exists'] else ''},
+            {'name': _(u'exists'), 'attribute': encapsulate(lambda x: exists_with_famfam(getattr(x['module'], x['name'])) if x['exists'] else '')},
         ]
     }
 

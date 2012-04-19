@@ -125,9 +125,9 @@ INSTALLED_APPS = (
     'pagination',
     'permissions',
     'dynamic_search',
-    #'user_management',
+    'user_management',
     # Project
-    #'reminder_comments',
+    'reminder_comments',
     'reminders',
     'main',
 )

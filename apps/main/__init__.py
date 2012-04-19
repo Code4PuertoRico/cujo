@@ -42,9 +42,9 @@ register_links(user_management_views, setup_links, menu_name='secondary_menu')
 
 __version_info__ = {
     'major': 0,
-    'minor': 2,
-    'micro': 3,
-    'releaselevel': 'final',
+    'minor': 3,
+    'micro': 0,
+    'releaselevel': 'alpha',
     'serial': 0
 }
 

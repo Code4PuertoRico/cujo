@@ -340,3 +340,10 @@ def generate_choices_w_labels(choices, display_object_type=True):
 
     #Sort results by the label not the key value
     return sorted(results, key=lambda x: x[1])
+
+
+def encapsulate(function):
+    # Workaround Django ticket 15791
+    # Changeset 16045
+    # http://stackoverflow.com/questions/6861601/cannot-resolve-callable-context-variable/6955045#6955045
+    return lambda: function
