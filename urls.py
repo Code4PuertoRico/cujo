@@ -13,8 +13,8 @@ urlpatterns = patterns('',
     (r'^settings/', include('smart_settings.urls')),
     (r'^permissions/', include('permissions.urls')),
     (r'^reminders/', include('reminders.urls')),
-    (r'^user_management/', include('user_management.urls')),
-    (r'^comments/', include('reminder_comments.urls')),
+    #(r'^user_management/', include('user_management.urls')),
+    #(r'^comments/', include('reminder_comments.urls')),
 )
 
 def handler500(request):
@@ -33,11 +33,8 @@ def handler500(request):
     })))
 
 if settings.DEVELOPMENT:
-    urlpatterns += patterns('',
-        (r'^%s-site_media/(?P<path>.*)$' % settings.PROJECT_NAME,
-            'django.views.static.serve',
-            {'document_root': 'site_media', 'show_indexes': True}),
-    )
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+    urlpatterns += staticfiles_urlpatterns()
 
     if 'rosetta' in settings.INSTALLED_APPS:
         urlpatterns += patterns('',
