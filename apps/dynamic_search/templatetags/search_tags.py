@@ -12,7 +12,7 @@ def search_form(context):
     context.update({
         'form': SearchForm(initial={'q': context.get('query_string', '')}),
         'request': context['request'],
-        'MEDIA_URL': context['MEDIA_URL'],
+        'STATIC_URL': context['STATIC_URL'],
         'form_action': reverse('results'),
         'form_title': _(u'Search')
     })

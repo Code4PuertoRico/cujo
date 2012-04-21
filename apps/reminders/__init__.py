@@ -1,32 +1,18 @@
+from __future__ import absolute_import
+
 import datetime
 
 from django.utils.translation import ugettext_lazy as _
 
 from navigation.api import register_links, register_top_menu, \
     register_model_list_columns, register_multi_item_links
-from permissions.api import register_permission, set_namespace_title
-from common.utils import two_state_template
+from common.widgets import two_state_template
+from common.utils import encapsulate
 
-from reminder_comments import comments_for_object
-
-from reminders.models import Reminder, Participant
-
-PERMISSION_REMINDER_VIEW = {'namespace': 'reminders', 'name': 'reminder_view', 'label': _(u'View reminder')}
-PERMISSION_REMINDER_VIEW_ALL = {'namespace': 'reminders', 'name': 'reminder_view_all', 'label': _(u'View all reminders')}
-PERMISSION_REMINDER_CREATE = {'namespace': 'reminders', 'name': 'reminder_create', 'label': _(u'Create reminder')}
-PERMISSION_REMINDER_EDIT = {'namespace': 'reminders', 'name': 'reminder_edit', 'label': _(u'Edit reminder')}
-PERMISSION_REMINDER_EDIT_ALL = {'namespace': 'reminders', 'name': 'reminder_edit_all', 'label': _(u'Edit all reminders')}
-PERMISSION_REMINDER_DELETE = {'namespace': 'reminders', 'name': 'reminder_delete', 'label': _(u'Delete reminder')}
-PERMISSION_REMINDER_DELETE_ALL = {'namespace': 'reminders', 'name': 'reminder_delete_all', 'label': _(u'Delete all reminders')}
-
-set_namespace_title('reminders', _(u'Reminders'))
-register_permission(PERMISSION_REMINDER_VIEW)
-register_permission(PERMISSION_REMINDER_VIEW_ALL)
-register_permission(PERMISSION_REMINDER_CREATE)
-register_permission(PERMISSION_REMINDER_EDIT)
-register_permission(PERMISSION_REMINDER_EDIT_ALL)
-register_permission(PERMISSION_REMINDER_DELETE)
-register_permission(PERMISSION_REMINDER_DELETE_ALL)
+from .models import Reminder, Participant
+from .permissions import (PERMISSION_REMINDER_VIEW, PERMISSION_REMINDER_VIEW_ALL,
+	PERMISSION_REMINDER_CREATE, PERMISSION_REMINDER_EDIT, PERMISSION_REMINDER_EDIT_ALL,
+	PERMISSION_REMINDER_DELETE, PERMISSION_REMINDER_DELETE_ALL)
 
 reminder_list = {'text': _(u'reminder list'), 'view': 'reminder_list', 'famfam': 'hourglass', 'permissions': [PERMISSION_REMINDER_VIEW]}
 reminder_list_all = {'text': _(u'reminder list (all)'), 'view': 'reminder_list_all', 'famfam': 'hourglass', 'permissions': [PERMISSION_REMINDER_VIEW_ALL]}
@@ -73,7 +59,6 @@ register_links([Participant], [reminder_participant_remove])
 
 register_links([Reminder], [reminder_participant_list], menu_name='form_header')
 
-register_links([Reminder], [comments_for_object], menu_name='form_header')
 
 register_multi_item_links(
     [
@@ -88,25 +73,25 @@ register_multi_item_links(
 
 register_top_menu('reminders',
     link={'famfam': 'hourglass', 'text': _(u'reminders'), 'view': 'reminder_list'},
-    children_path_regex=[r'^reminders', r'comments'], position=0
+    children_path_regex=[r'^reminders', r'comments'], position=1
 )
 
 register_model_list_columns(Reminder, [
         {
             'name': _(u'created'),
-            'attribute': lambda x: x.datetime_created
+            'attribute': encapsulate(lambda x: x.datetime_created)
         },
         {
             'name': _(u'expires'),
-            'attribute': lambda x: x.datetime_expire
+            'attribute': encapsulate(lambda x: x.datetime_expire)
         },
         {
             'name': _('days'),
-            'attribute': lambda x: (x.datetime_expire - x.datetime_created).days
+            'attribute': encapsulate(lambda x: (x.datetime_expire - x.datetime_created).days)
         },
         {
             'name': _('expired?'),
-            'attribute': lambda x: two_state_template((x.datetime_expire < datetime.datetime.now().date()), states=1)
+            'attribute': encapsulate(lambda x: two_state_template((x.datetime_expire < datetime.datetime.now().date()), monostate=True))
         }
     ]
 )
@@ -114,11 +99,11 @@ register_model_list_columns(Reminder, [
 register_model_list_columns(Participant, [
         {
             'name': _(u'name'),
-            'attribute': lambda x: x.user.get_full_name() if x.user.get_full_name() else x.user
+            'attribute': encapsulate(lambda x: x.user.get_full_name() if x.user.get_full_name() else x.user)
         },
         {
             'name': _(u'role'),
-            'attribute': lambda x: x.get_role_display()
+            'attribute': encapsulate(lambda x: x.get_role_display())
         }
     ]
 )

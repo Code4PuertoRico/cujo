@@ -64,17 +64,17 @@ USE_L10N = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'site_media/')
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static/')
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = '/%s-site_media/' % PROJECT_NAME
+STATIC_URL = '/%s-static/' % PROJECT_NAME
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
 # Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = MEDIA_URL + 'grappelli/'
+ADMIN_MEDIA_PREFIX = STATIC_URL + 'admin/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '_38j0)2ym$2to&+i2$ge4$2nrfqasip$624^$+@wu@mv_+u(uw'
@@ -90,7 +90,7 @@ TEMPLATE_LOADERS = (
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    #'django.middleware.locale.LocaleMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -108,7 +108,7 @@ TEMPLATE_DIRS = (
 )
 
 INSTALLED_APPS = (
-    'grappelli',
+	# Django
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -116,32 +116,33 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.admin',
     'django.contrib.comments',
+	'django.contrib.staticfiles',
+    # Common
+    'project_setup',
     'smart_settings',
     'navigation',
     'web_theme',
-    'main',
     'common',
     'pagination',
     'permissions',
     'dynamic_search',
-    'djcelery',
-    'indexer',
-    'paging',
-    'sentry',
-    'sentry.client',
-    'sentry.client.celery',
-    'reminders',
     'user_management',
+    # Project
     'reminder_comments',
+    'reminders',
+    'main',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.auth',
     'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
+	'django.core.context_processors.static',
     'django.core.context_processors.request',
-    'grappelli.context_processors.admin_template_path',
-#    'django.contrib.messages.context_processors.messages',
+)
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
 #===== User configuration options ===============
@@ -152,25 +153,9 @@ WEB_THEME_THEME = 'djime-cerulean'
 #------------ django-sendfile --------------
 # Change to xsendfile for apache if x-sendfile is enabled
 SENDFILE_BACKEND = 'sendfile.backends.simple'
-#----------- django-celery --------------
-try:
-    import djcelery
-except ImportError:
-    print 'djcelery not found'
-djcelery.setup_loader()
-BROKER_HOST = "localhost"
-BROKER_PORT = 5672
-BROKER_USER = "guest"
-BROKER_PASSWORD = "guest"
-BROKER_VHOST = "/"
-CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 #======== End of user configuration options =======
-#--------- Celery ------------------
-CELERY_DISABLE_RATE_LIMITS = True
 #--------- Web theme ---------------
 WEB_THEME_ENABLE_SCROLL_JS = False
-#--------- Grappelli ----------------
-GRAPPELLI_ADMIN_TITLE = PROJECT_TITLE
 #--------- Pagination ----------------
 PAGINATION_INVALID_PAGE_RAISES_404 = True
 #---------- Search ------------------
@@ -183,7 +168,7 @@ LOGIN_EXEMPT_URLS = (
     r'^favicon\.ico$',
     r'^about\.html$',
     r'^legal/',  # allow the entire /legal/* subsection
-    r'^%s-site_media/' % PROJECT_NAME,
+    r'^%s-static/' % PROJECT_NAME,
 
     r'^accounts/register/$',
     r'^accounts/register/complete/$',

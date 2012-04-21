@@ -3,7 +3,7 @@ from django.template import RequestContext
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import PermissionDenied
 
-from permissions.api import check_permissions
+from permissions.models import Permission
 
 from main.api import diagnostics, tools
 
@@ -19,7 +19,7 @@ def tools_menu(request):
         for link in values['links']:
             try:
                 permissions = link.get('permissions', [])
-                check_permissions(request.user, permissions)
+                Permission.objects.check_permissions(request.user, permissions)
                 user_tools[namespace] = {
                     'title': values['title']
                     }

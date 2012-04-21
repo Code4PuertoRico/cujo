@@ -3,6 +3,12 @@
 {% load pagination_tags %}
 {% load navigation_tags %}
 {% load non_breakable %}
+{% load variable_tags %}
+{% load main_settings_tags %}
+{% load multiselect_tags %}
+{% load subtemplates_tags %}
+
+{% get_main_setting "DISABLE_ICONS" as disable_icons %}
 
 {% if side_bar %}
     <div class="block">
@@ -34,7 +40,7 @@
                         <div class="group navform wat-cf">
                         {% for link in multi_item_links %}
                             <button class="button" type="submit" name="action" value="{{ link.url }}">
-                               {% if link.famfam %}<span class="famfam active famfam-{{ link.famfam|default:'link' }}"></span>{% endif %}{{ link.text|capfirst }}
+                               {% if link.famfam and not disable_icons %}<span class="famfam active famfam-{{ link.famfam|default:'link' }}"></span>{% endif %}{{ link.text|capfirst }}
                             </button>
                         {% endfor %}
                         </div>
@@ -44,7 +50,7 @@
                         {% endwith %}
                         <div class="group navform wat-cf">
                             <button class="button" type="submit" name="{{ form.prefix }}-submit">
-                                <img src="{{ MEDIA_URL }}web_theme_media/images/icons/tick.png" alt="{% if object %}{% trans 'Save' %}{% else %}{% trans 'Submit' %}{% endif %}" /> {% if object %}{% trans "Save" %}{% else %}{% trans "Submit" %}{% endif %}
+                                <img src="{{ STATIC_URL }}web_theme_media/images/icons/tick.png" alt="{% if object %}{% trans 'Save' %}{% else %}{% trans 'Submit' %}{% endif %}" /> {% if object %}{% trans "Save" %}{% else %}{% trans "Submit" %}{% endif %}
                             </button>
                         </div>
                     {% endif %}
@@ -71,9 +77,13 @@
                                 <th>{{ column.name|capfirst }}</th>
                             {% endfor %}
 
-                            {% for column in object_list.0|get_model_list_columns %}
-                                <th>{{ column.name|capfirst }}</th>
-                            {% endfor %}            
+                            {% if object_list %}
+                                {% get_object_list_object_name object_list.0 %}
+
+                                {% for column in object|get_model_list_columns %}
+                                    <th>{{ column.name|capfirst }}</th>
+                                {% endfor %}            
+                            {% endif %}
 
                             {% for column in extra_columns %}
                                 <th>{{ column.name|capfirst }}</th>
@@ -84,10 +94,18 @@
                             {% endif %}
                         </tr>
                     {% endif %}
+
                     {% for object in object_list %}
+                        {% get_object_list_object_name object %}
                         <tr class="{% cycle 'odd' 'even2' %}">
                         {% if multi_select or multi_select_as_buttons %}    
-                            <td><input type="checkbox" class="checkbox" name="pk_{{ object.pk }}" value="" /></td>            
+                            <td>
+                                {% if multi_select_item_properties %}
+                                    <input type="checkbox" class="checkbox" name="properties_{{ object|get_encoded_parameter:multi_select_item_properties }}" value="" />
+                                {% else %}
+                                    <input type="checkbox" class="checkbox" name="pk_{{ object.pk }}" value="" />
+                                {% endif %}
+                            </td>
                         {% endif %}
                         {% if not hide_object %}
                             {% if main_object %}
@@ -122,8 +140,18 @@
                                 {% endif %}
                             {% endfor %}
                             {% if not hide_links %}
+                                {% if list_object_variable_name %}
+                                    {% copy_variable object as list_object_variable_name %}
+                                    {% copy_variable list_object_variable_name as "navigation_object_name" %}
+                                {% endif %}
                                 <td class="last">
-                                    {% object_navigation_template %}
+                                    {% if navigation_object_links %}
+                                        {% with navigation_object_links as overrided_object_links %}
+                                            {% object_navigation_template %}
+                                        {% endwith %}
+                                    {% else %}
+                                        {% object_navigation_template %}
+                                    {% endif %}
                                 </td>
                             {% endif %}
                         </tr>
@@ -144,7 +172,7 @@
                         <div class="group navform wat-cf">
                         {% for link in multi_item_links %}
                             <button class="button" type="submit" name="action" value="{{ link.url }}">
-                               {% if link.famfam %}<span class="famfam active famfam-{{ link.famfam|default:'link' }}"></span>{% endif %}{{ link.text|capfirst }}
+                               {% if link.famfam and not disable_icons %}<span class="famfam active famfam-{{ link.famfam|default:'link' }}"></span>{% endif %}{{ link.text|capfirst }}
                             </button>
                         {% endfor %}
                         </div>
@@ -154,7 +182,7 @@
                         {% endwith %}
                         <div class="group navform wat-cf">
                             <button class="button" type="submit" name="{{ form.prefix }}-submit">
-                                <img src="{{ MEDIA_URL }}web_theme_media/images/icons/tick.png" alt="{% if object %}{% trans 'Save' %}{% else %}{% trans 'Submit' %}{% endif %}" /> {% if object %}{% trans "Save" %}{% else %}{% trans "Submit" %}{% endif %}
+                                <img src="{{ STATIC_URL }}web_theme_media/images/icons/tick.png" alt="{% if object %}{% trans 'Save' %}{% else %}{% trans 'Submit' %}{% endif %}" /> {% if object %}{% trans "Save" %}{% else %}{% trans "Submit" %}{% endif %}
                             </button>
                         </div>
                     {% endif %}
