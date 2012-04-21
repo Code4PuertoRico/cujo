@@ -1,55 +1,18 @@
+from __future__ import absolute_import
+
+import os
+
 from django import forms
-from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django.db import models
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import authenticate
+from django.conf import settings
 
-from common.utils import return_attrib
-
-
-class DetailSelectMultiple(forms.widgets.SelectMultiple):
-    def __init__(self, queryset=None, *args, **kwargs):
-        self.queryset = queryset
-        super(DetailSelectMultiple, self).__init__(*args, **kwargs)
-
-    def render(self, name, value, attrs=None, choices=()):
-        if value is None:
-            value = ''
-        final_attrs = self.build_attrs(attrs, name=name)
-        css_class = final_attrs.get('class', 'list')
-        output = u'<ul class="%s">' % css_class
-        options = None
-        if value:
-            if getattr(value, '__iter__', None):
-                options = [(index, string) for index, string in \
-                    self.choices if index in value]
-            else:
-                options = [(index, string) for index, string in \
-                    self.choices if index == value]
-        else:
-            if self.choices:
-                if self.choices[0] != (u'', u'---------') and value != []:
-                    options = [(index, string) for index, string in \
-                        self.choices]
-
-        if options:
-            for index, string in options:
-                if self.queryset:
-                    try:
-                        output += u'<li><a href="%s">%s</a></li>' % (
-                            self.queryset.get(pk=index).get_absolute_url(),
-                            string)
-                    except AttributeError:
-                        output += u'<li>%s</li>' % (string)
-                else:
-                    output += u'<li>%s</li>' % string
-        else:
-            output += u'<li>%s</li>' % _(u"None")
-        return mark_safe(output + u'</ul>\n')
-
-
-class PlainWidget(forms.widgets.Widget):
-    def render(self, name, value, attrs=None):
-        return mark_safe(u'%s' % value)
+from .utils import return_attrib
+from .widgets import (DetailSelectMultiple, PlainWidget, TextAreaDiv,
+    EmailInput)
 
 
 class DetailForm(forms.ModelForm):
@@ -85,11 +48,14 @@ class DetailForm(forms.ModelForm):
                     attrs=field.widget.attrs,
                     queryset=getattr(field, 'queryset', None),
                 )
-                self.fields[field_name].help_text = u''
+                self.fields[field_name].help_text = ''
+            elif isinstance(field.widget, forms.widgets.Textarea):
+                self.fields[field_name].widget = TextAreaDiv(
+                    attrs=field.widget.attrs,
+                )
 
         for field_name, field in self.fields.items():
-            self.fields[field_name].widget.attrs.update({'readonly': u'readonly'})
-            self.fields[field_name].localize = True
+            self.fields[field_name].widget.attrs.update({'readonly': 'readonly'})
 
 
 class GenericConfirmForm(forms.Form):
@@ -139,3 +105,68 @@ class ChoiceForm(forms.Form):
         self.fields['selection'].widget.attrs.update({'size': 14, 'class': 'choice_form'})
 
     selection = forms.MultipleChoiceField()
+
+
+class UserForm_view(DetailForm):
+    """
+    Form used to display an user's public details
+    """
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'email', 'is_staff', 'is_superuser', 'last_login', 'date_joined', 'groups')
+
+
+class UserForm(forms.ModelForm):
+    """
+    Form used to edit an user's mininal fields by the user himself
+    """
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'email')
+
+
+class EmailAuthenticationForm(AuthenticationForm):
+    """
+    Override the default authentication form to use email address
+    authentication
+    """
+    email = forms.CharField(label=_(u'Email'), max_length=75,
+        widget=EmailInput(attrs={'style': 'width: 100%;'})
+    )
+
+    def clean(self):
+        email = self.cleaned_data.get('email')
+        password = self.cleaned_data.get('password')
+
+        if email and password:
+            self.user_cache = authenticate(email=email, password=password)
+            if self.user_cache is None:
+                raise forms.ValidationError(_('Please enter a correct email and password. Note that the password fields is case-sensitive.'))
+            elif not self.user_cache.is_active:
+                raise forms.ValidationError(_('This account is inactive.'))
+        self.check_for_test_cookie()
+        return self.cleaned_data
+
+# Remove the inherited username field
+EmailAuthenticationForm.base_fields.keyOrder = ['email', 'password']
+
+
+class FileDisplayForm(forms.Form):
+    text = forms.CharField(
+        label='',  # _(u'Text'),
+        widget=forms.widgets.Textarea(
+            attrs={'cols': 40, 'rows': 20, 'readonly': 'readonly'}
+        )
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(FileDisplayForm, self).__init__(*args, **kwargs)
+        changelog_path = os.path.join(settings.PROJECT_ROOT, os.sep.join(self.DIRECTORY), self.FILENAME)
+        fd = open(changelog_path)
+        self.fields['text'].initial = fd.read()
+        fd.close()
+
+
+class LicenseForm(FileDisplayForm):
+    FILENAME = u'LICENSE'
+    DIRECTORY = [u'docs', u'credits']

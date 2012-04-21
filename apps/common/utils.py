@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import os
 import re
 import types
+import tempfile
+import string
+import random
 
 from django.utils.http import urlquote  as django_urlquote
 from django.utils.http import urlencode as django_urlencode
@@ -10,11 +15,14 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
-from django.utils.safestring import mark_safe
+from django.core.urlresolvers import reverse
+from django.utils.functional import lazy
+
+reverse_lazy = lazy(reverse, str)
 
 
 def urlquote(link=None, get=None):
-    u'''
+    u"""
     This method does both: urlquote() and urlencode()
 
     urlqoute(): Quote special characters in 'link'
@@ -29,7 +37,7 @@ def urlquote(link=None, get=None):
       urlquote('/mypath/', {'key': 'value'})              --> '/mypath/?key=value'
       urlquote('/mypath/', {'key': ['value1', 'value2']}) --> '/mypath/?key=value1&key=value2'
       urlquote({'key': ['value1', 'value2']})             --> 'key=value1&key=value2'
-    '''
+    """
     if get is None:
         get = []
 
@@ -104,29 +112,13 @@ def pretty_size_10(size):
         ])
 
 
-def exists_with_famfam(path):
-    try:
-        return two_state_template(os.path.exists(path))
-    except Exception, exc:
-        return exc
-
-
-def two_state_template(state, famfam_ok_icon=u'tick', famfam_fail_icon=u'cross', states=2):
-    if state:
-        output = u'<span class="famfam active famfam-%s"></span>' % famfam_ok_icon
-    elif states == 2:
-        output = u'<span class="famfam active famfam-%s"></span>' % famfam_fail_icon
-    else:
-        output = u''
-
-    return mark_safe(output)
-
-
 # The code here is based loosely on John Cardinal's notes found at:
 # http://www.johncardinal.com/tmgutil/capitalizenames.htm
 
 def proper_name(name):
-    """Does the work of capitalizing a name (can be a full name)."""
+    """
+    Does the work of capitalizing a name (can be a full name).
+    """
     mc = re.compile(r'^Mc(\w)(?=\w)', re.I)
     mac = re.compile(r'^Mac(\w)(?=\w)', re.I)
     suffixes = [
@@ -306,11 +298,11 @@ def return_type(value):
     if isinstance(value, types.FunctionType):
         return value.__doc__ if value.__doc__ else _(u'function found')
     elif isinstance(value, types.ClassType):
-        return _(u'class found: %s') % unicode(value).split("'")[1].split('.')[-1]
+        return u'%s.%s' % (value.__class__.__module__, value.__class__.__name__)
     elif isinstance(value, types.TypeType):
-        return _(u'class found: %s') % unicode(value).split("'")[1].split('.')[-1]
+        return u'%s.%s' % (value.__module__, value.__name__)
     elif isinstance(value, types.DictType) or isinstance(value, types.DictionaryType):
-        return ','.join(list(value))
+        return u', '.join(list(value))
     else:
         return value
 
@@ -342,8 +334,65 @@ def generate_choices_w_labels(choices, display_object_type=True):
     return sorted(results, key=lambda x: x[1])
 
 
+def get_object_name(obj, display_object_type=True):
+    ct_label = ContentType.objects.get_for_model(obj).name
+    if isinstance(obj, User):
+        label = obj.get_full_name() if obj.get_full_name() else obj
+    else:
+        label = unicode(obj)
+
+    if display_object_type:
+        try:
+            verbose_name = unicode(obj._meta.verbose_name)
+        except AttributeError:
+            verbose_name = ct_label
+
+        return u'%s: %s' % (verbose_name, label)
+    else:
+        return u'%s' % (label)
+
+
+def return_diff(old_obj, new_obj, attrib_list=None):
+    diff_dict = {}
+    if not attrib_list:
+        attrib_list = old_obj.__dict__.keys()
+    for attrib in attrib_list:
+        old_val = getattr(old_obj, attrib)
+        new_val = getattr(new_obj, attrib)
+        if old_val != new_val:
+            diff_dict[attrib] = {
+                'old_value': old_val,
+                'new_value': new_val
+            }
+
+    return diff_dict
+
+
+def validate_path(path):
+    if os.path.exists(path) != True:
+        # If doesn't exist try to create it
+        try:
+            os.mkdir(path)
+        except:
+            return False
+
+    # Check if it is writable
+    try:
+        fd, test_filepath = tempfile.mkstemp(dir=path)
+        os.close(fd)
+        os.unlink(test_filepath)
+    except:
+        return False
+
+    return True
+
+
 def encapsulate(function):
     # Workaround Django ticket 15791
     # Changeset 16045
     # http://stackoverflow.com/questions/6861601/cannot-resolve-callable-context-variable/6955045#6955045
     return lambda: function
+
+
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for x in range(size))
