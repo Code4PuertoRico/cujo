@@ -15,6 +15,7 @@ urlpatterns = patterns('',
     (r'^reminders/', include('reminders.urls')),
     (r'^user_management/', include('user_management.urls')),
     (r'^comments/', include('reminder_comments.urls')),
+    (r'^project_setup/', include('project_setup.urls')),
 )
 
 def handler500(request):
