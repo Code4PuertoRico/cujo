@@ -1,210 +1,205 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
-# Roberto Rosario <roberto.rosario.gonzalez@gmail.com>, 2011, 2012.
+#   <winterfall24@gmail.com>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: Mayan EDMS\n"
-"Report-Msgid-Bugs-To: \n"
+"Report-Msgid-Bugs-To: http://github.com/rosarior/mayan/issues\n"
 "POT-Creation-Date: 2012-02-12 15:20-0400\n"
-"PO-Revision-Date: 2012-02-12 00:25+0000\n"
-"Last-Translator: Roberto Rosario <roberto.rosario.gonzalez@gmail.com>\n"
-"Language-Team: Spanish (Castilian) (http://www.transifex.net/projects/p/"
-"mayan-edms/team/es/)\n"
-"Language: es\n"
+"PO-Revision-Date: 2012-02-20 16:08+0000\n"
+"Last-Translator: mic <winterfall24@gmail.com>\n"
+"Language-Team: Polish (http://www.transifex.net/projects/p/mayan-edms/language/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Language: pl\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 
 #: __init__.py:17 models.py:209 views.py:40
 msgid "roles"
-msgstr "funciones"
+msgstr ""
 
 #: __init__.py:18
 msgid "create new role"
-msgstr "crear nueva función"
+msgstr ""
 
 #: __init__.py:19
 msgid "edit"
-msgstr "editar"
+msgstr ""
 
 #: __init__.py:20
 msgid "members"
-msgstr "miembros"
+msgstr ""
 
 #: __init__.py:21
 msgid "role permissions"
-msgstr "permisos de la funcion"
+msgstr ""
 
 #: __init__.py:22
 msgid "delete"
-msgstr "eliminar"
+msgstr ""
 
 #: __init__.py:24
 msgid "grant"
-msgstr "otorgar"
+msgstr "przyznać"
 
 #: __init__.py:25
 msgid "revoke"
-msgstr "revocar"
+msgstr "odwołać"
 
 #: models.py:51
 msgid "Insufficient permissions."
-msgstr "Permisos insuficientes."
+msgstr "Niewystarczające uprawnienia."
 
 #: models.py:123 views.py:60
 msgid "namespace"
-msgstr "espacio de nombres"
+msgstr ""
 
 #: models.py:124 views.py:61
 msgid "name"
-msgstr "nombre"
+msgstr "nazwa"
 
 #: models.py:131 models.py:187 views.py:152 views.py:215
 msgid "permission"
-msgstr "permiso"
+msgstr "uprawnienie"
 
 #: models.py:132 views.py:57 views.py:154 views.py:217
 msgid "permissions"
-msgstr "permisos"
+msgstr "uprawnienia"
 
 #: models.py:195
 msgid "permission holder"
-msgstr "titular de la autorización"
+msgstr ""
 
 #: models.py:196
 msgid "permission holders"
-msgstr "titulares de autorización"
+msgstr ""
 
 #: models.py:204
 msgid "label"
-msgstr "etiqueta"
+msgstr "etykieta"
 
 #: models.py:208 models.py:239 views.py:76 views.py:93 views.py:117
 #: views.py:334
 msgid "role"
-msgstr "función"
+msgstr ""
 
 #: models.py:255
 msgid "role member"
-msgstr "miembro de la función"
+msgstr ""
 
 #: models.py:256
 msgid "role members"
-msgstr "miembros de las functiones"
+msgstr ""
 
 #: permissions.py:7
 msgid "Permissions"
-msgstr "Permisos"
+msgstr "Uprawnienia"
 
 #: permissions.py:9
 msgid "View roles"
-msgstr "Ver las funciones"
+msgstr ""
 
 #: permissions.py:10
 msgid "Edit roles"
-msgstr "Modificar las funciones"
+msgstr ""
 
 #: permissions.py:11
 msgid "Create roles"
-msgstr "Crear funciones"
+msgstr ""
 
 #: permissions.py:12
 msgid "Delete roles"
-msgstr "Eliminar funciones"
+msgstr ""
 
 #: permissions.py:13
 msgid "Grant permissions"
-msgstr "Conceder permisos"
+msgstr ""
 
 #: permissions.py:14
 msgid "Revoke permissions"
-msgstr "Revocar permisos"
+msgstr ""
 
 #: views.py:63
 msgid "has permission"
-msgstr "tiene permiso"
+msgstr "ma uprawnienie"
 
 #: views.py:149 views.py:212
 msgid " and "
-msgstr "y"
+msgstr "i"
 
 #: views.py:149 views.py:212
 #, python-format
 msgid "%(permissions)s to %(requester)s"
-msgstr "%(permissions)s a %(requester)s"
+msgstr ""
 
 #: views.py:159
 #, python-format
 msgid "Permission \"%(permission)s\" granted to: %(requester)s."
-msgstr "Permiso \"%(permission)s\" otorgado a: %(requester)s."
+msgstr ""
 
 #: views.py:162
 #, python-format
 msgid "%(requester)s, already had the permission \"%(permission)s\" granted."
-msgstr "%(requester)s, ya tenía el permiso \"%(permission)s\" concedido."
+msgstr ""
 
 #: views.py:173
 #, python-format
 msgid ""
 "Are you sure you wish to grant the %(permissions_label)s %(title_suffix)s?"
 msgstr ""
-"¿Está seguro que desea otorgar el %(permissions_label)s %(title_suffix)s?"
 
 #: views.py:222
 #, python-format
 msgid "Permission \"%(permission)s\" revoked from: %(requester)s."
-msgstr "Permiso \"%(permission)s\" revocado de: %(requester)s."
+msgstr ""
 
 #: views.py:225
 #, python-format
 msgid "%(requester)s, doesn't have the permission \"%(permission)s\" granted."
-msgstr "%(requester)s, no tiene el permiso \"%(permission)s\" concedido."
+msgstr ""
 
 #: views.py:236
 #, python-format
 msgid ""
 "Are you sure you wish to revoke the %(permissions_label)s %(title_suffix)s?"
 msgstr ""
-"¿Estás seguro que quiere revocar el %(permissions_label)s %(title_suffix)s?"
 
 #: views.py:271 views.py:295
 msgid "Users"
-msgstr "Usuarios"
+msgstr "Użytkownicy"
 
 #: views.py:274 views.py:298
 msgid "Groups"
-msgstr "Grupos"
+msgstr "Grupy"
 
 #: views.py:277 views.py:301
 msgid "Special"
-msgstr "Especial"
+msgstr "Specjalny"
 
 #: views.py:330
 #, python-format
 msgid "non members of role: %s"
-msgstr "no miembros de la función: %s"
+msgstr ""
 
 #: views.py:331
 #, python-format
 msgid "members of role: %s"
-msgstr "miembros de la función: %s"
+msgstr ""
 
 #: widgets.py:16
 msgid "Revoke"
-msgstr "Revocar"
+msgstr "Odwołać"
 
 #: widgets.py:21
 msgid "Grant"
-msgstr "Otorgar"
+msgstr ""
 
 #: conf/settings.py:10
 msgid ""
 "A list of existing roles that are automatically assigned to newly created "
 "users"
 msgstr ""
-"Una lista de funciones existentes que se asignan automáticamente a los "
-"usuarios nuevos"
