@@ -154,10 +154,10 @@ def reminder_delete(request, reminder_id=None, reminder_id_list=None):
 	elif reminder_id_list:
 		# TODO: Improve to display PermissionDenied instead of 404 on unauthorized id's
 		try:
-			check_permissions(request.user, [PERMISSION_REMINDER_DELETE_ALL])
+			Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_DELETE_ALL])
 			reminders = [get_object_or_404(Reminder, pk=reminder_id) for reminder_id in reminder_id_list.split(',')]
 		except PermissionDenied:
-			check_permissions(request.user, [PERMISSION_REMINDER_DELETE])
+			Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_DELETE])
 			reminders = [get_object_or_404(Reminder.objects.filter(participant__user=request.user).filter(participant__role__in=[PARTICIPANT_ROLE_CREATOR, PARTICIPANT_ROLE_EDITOR]).distinct(), pk=reminder_id) for reminder_id in reminder_id_list.split(u',')]
 	else:
 		messages.error(request, _(u'Must provide at least one reminder.'))
