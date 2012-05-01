@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import datetime
 
 from django import forms
@@ -7,9 +9,9 @@ from django.contrib.auth.models import User
 
 from common.forms import DetailForm
 
-from reminders.models import Reminder, \
-    PARTICIPANT_ROLE_EDITOR, PARTICIPANT_ROLE_WATCHER
-from reminders.utils import get_user_full_name
+from .models import Reminder
+from .utils import get_user_full_name
+from .literals import PARTICIPANT_ROLE_EDITOR, PARTICIPANT_ROLE_WATCHER
 
 ALLOWED_PARTICIPANT_ROLE_CHOICES = (
     (PARTICIPANT_ROLE_EDITOR, _(u'Editor')),

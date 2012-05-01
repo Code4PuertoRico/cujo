@@ -117,6 +117,8 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.comments',
 	'django.contrib.staticfiles',
+	# 3rd party
+	'south',
     # Common
     'project_setup',
     'smart_settings',
