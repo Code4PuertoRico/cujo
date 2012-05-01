@@ -19,4 +19,6 @@ urlpatterns = patterns('reminders.views',
     url(r'^(?P<reminder_id>\d+)/participant/add/$', 'participant_add', (), 'participant_add'),
     url(r'^(?P<reminder_id>\d+)/participant/list/$', 'participant_list', (), 'participant_list'),
     url(r'^participant/(?P<participant_id>\d+)/remove/$', 'participant_remove', (), 'participant_remove'),
+
+    url(r'^groups/list/$', 'group_list', (), 'group_list'),
 )

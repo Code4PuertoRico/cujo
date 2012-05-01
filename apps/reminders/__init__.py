@@ -33,10 +33,13 @@ reminder_participant_add = {'text': _(u'add participant'), 'view': 'participant_
 reminder_participant_remove = {'text': _(u'remove'), 'view': 'participant_remove', 'args': 'object.pk', 'famfam': 'user_delete', 'permissions': [PERMISSION_REMINDER_EDIT]}
 reminder_participant_list = {'text': _(u'participants'), 'view': 'participant_list', 'args': 'object.pk', 'famfam': 'group', 'permissions': [PERMISSION_REMINDER_VIEW]}
 
+group_list = {'text': _(u'group list'), 'view': 'group_list', 'famfam': 'hourglass'}#, 'permissions': [PERMISSION_REMINDER_VIEW]}
+
 register_links(['participant_list'], [reminder_participant_add], menu_name='sidebar')
 
 register_links(
     [
+		'group_list',
         'comments_for_object', 'comment_add', 'comment_delete', 'comment_multiple_delete',
         'participant_remove', 'reminder_participant_add', 'participant_list',
         'future_expired_remider_list', 'future_expired_remider_list_all',
@@ -45,6 +48,7 @@ register_links(
         'expired_remider_list', 'expired_remider_list_all', 'reminder_add',
         'reminder_add_days', 'participant_add'],
     [
+		group_list,
         reminder_list, reminder_list_all, expired_remider_list,
         expired_remider_list_all, future_expired_remider_list,
         future_expired_remider_list_all, reminder_add, reminder_add_days
