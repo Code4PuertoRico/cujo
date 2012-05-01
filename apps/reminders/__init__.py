@@ -11,8 +11,8 @@ from common.utils import encapsulate
 
 from .models import Reminder, Participant
 from .permissions import (PERMISSION_REMINDER_VIEW, PERMISSION_REMINDER_VIEW_ALL,
-	PERMISSION_REMINDER_CREATE, PERMISSION_REMINDER_EDIT, PERMISSION_REMINDER_EDIT_ALL,
-	PERMISSION_REMINDER_DELETE, PERMISSION_REMINDER_DELETE_ALL)
+    PERMISSION_REMINDER_CREATE, PERMISSION_REMINDER_EDIT, PERMISSION_REMINDER_EDIT_ALL,
+    PERMISSION_REMINDER_DELETE, PERMISSION_REMINDER_DELETE_ALL)
 
 reminder_list = {'text': _(u'reminder list'), 'view': 'reminder_list', 'famfam': 'hourglass', 'permissions': [PERMISSION_REMINDER_VIEW]}
 reminder_list_all = {'text': _(u'reminder list (all)'), 'view': 'reminder_list_all', 'famfam': 'hourglass', 'permissions': [PERMISSION_REMINDER_VIEW_ALL]}
