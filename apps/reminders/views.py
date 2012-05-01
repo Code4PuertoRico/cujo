@@ -16,12 +16,11 @@ from django.contrib.auth.models import User
 from common.utils import encapsulate
 from permissions.models import Permission
 
-from reminders.forms import ReminderForm, ReminderForm_view, \
-	ReminderForm_days, FutureDateForm, ParticipantForm_add
-from reminders.models import Reminder, Participant, \
-	PARTICIPANT_ROLE_CHOICES, PARTICIPANT_ROLE_CREATOR, \
-	PARTICIPANT_ROLE_EDITOR, PARTICIPANT_ROLE_WATCHER
-
+from .forms import (ReminderForm, ReminderForm_view,
+	ReminderForm_days, FutureDateForm, ParticipantForm_add)
+from .models import Reminder, Participant
+from .literals import (PARTICIPANT_ROLE_CHOICES, PARTICIPANT_ROLE_CREATOR,
+	PARTICIPANT_ROLE_EDITOR, PARTICIPANT_ROLE_WATCHER)
 from .permissions import (PERMISSION_REMINDER_VIEW, PERMISSION_REMINDER_CREATE,
 	PERMISSION_REMINDER_EDIT, PERMISSION_REMINDER_DELETE,
 	PERMISSION_REMINDER_VIEW_ALL, PERMISSION_REMINDER_EDIT_ALL,
