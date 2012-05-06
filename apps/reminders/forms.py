@@ -10,13 +10,6 @@ from django.contrib.auth.models import User
 from common.forms import DetailForm
 
 from .models import Reminder
-from .utils import get_user_full_name
-from .literals import PARTICIPANT_ROLE_EDITOR, PARTICIPANT_ROLE_WATCHER
-
-ALLOWED_PARTICIPANT_ROLE_CHOICES = (
-    (PARTICIPANT_ROLE_EDITOR, _(u'Editor')),
-    (PARTICIPANT_ROLE_WATCHER, _(u'Watcher')),
-)
 
 
 class ReminderForm(forms.ModelForm):
@@ -56,11 +49,3 @@ class ReminderForm_view(DetailForm):
 
 class FutureDateForm(forms.Form):
     future_date = forms.DateField(initial=datetime.datetime.now(), widget=SelectDateWidget())
-
-
-class ParticipantForm_add(forms.Form):
-    qs = User.objects.filter(is_staff=False).filter(is_superuser=False).order_by('first_name', 'last_name', 'username')
-    user_choices = [(user.pk, get_user_full_name(user)) for user in qs]
-    # Fields
-    user = forms.ChoiceField(choices=user_choices, label=_(u'User'))
-    role = forms.ChoiceField(choices=ALLOWED_PARTICIPANT_ROLE_CHOICES, label=_(u'Role'))

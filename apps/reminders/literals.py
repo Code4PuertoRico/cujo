@@ -1,15 +1,5 @@
 from django.utils.translation import ugettext_lazy as _
 
-PARTICIPANT_ROLE_CREATOR = u'cr'
-PARTICIPANT_ROLE_WATCHER = u'wa'
-PARTICIPANT_ROLE_EDITOR = u'ed'
-
-PARTICIPANT_ROLE_CHOICES = (
-    (PARTICIPANT_ROLE_CREATOR, _(u'Creator')),
-    (PARTICIPANT_ROLE_EDITOR, _(u'Editor')),
-    (PARTICIPANT_ROLE_WATCHER, _(u'Watcher')),
-)
-
 PREEMPTIVE_CHOICES = (
     (u'48h', _(u'2 days')),
     (u'24h', _(u'1 day')),

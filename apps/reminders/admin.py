@@ -1,17 +1,7 @@
+from __future__ import absolute_import
+
 from django.contrib import admin
 
-from reminders.models import Reminder, Participant
+from .models import Reminder
 
-
-class ParticipantInline(admin.StackedInline):
-    model = Participant
-    extra = 1
-    classes = ('collapse-open',)
-    allow_add = True
-
-
-class ReminderAdmin(admin.ModelAdmin):
-    inlines = [ParticipantInline]
-
-
-admin.site.register(Reminder, ReminderAdmin)
+admin.site.register(Reminder)

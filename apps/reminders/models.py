@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 
 from dynamic_search.api import register
 
-from .literals import PARTICIPANT_ROLE_CHOICES, PREEMPTIVE_CHOICES
+from .literals import PREEMPTIVE_CHOICES
 
 
 class Reminder(models.Model):
@@ -38,23 +38,9 @@ class Reminder(models.Model):
 		super(Reminder, self).save(*args, **kwargs)
 
 
-class Participant(models.Model):
-	reminder = models.ForeignKey(Reminder, verbose_name=_(u'reminder'))
-	user = models.ForeignKey(User, verbose_name=_(u'user'))
-	role = models.CharField(max_length=2, choices=PARTICIPANT_ROLE_CHOICES, verbose_name=_(u'role'))
-
-	class Meta:
-		unique_together = ('reminder', 'user', 'role')
-		verbose_name = _(u'participant')
-		verbose_name_plural = _(u'participants')
-
-	def __unicode__(self):
-		return unicode(self.user.get_full_name() if self.user.get_full_name() else self.user)
-
-
 class Notification(models.Model):
 	reminder = models.ForeignKey(Reminder, verbose_name=_(u'reminder'))
-	participant = models.ForeignKey(Participant, verbose_name=_(u'participant'))
+	#participant = models.ForeignKey(Participant, verbose_name=_(u'participant'))
 	preemptive = models.CharField(max_length=4, choices=PREEMPTIVE_CHOICES, verbose_name=_(u'preemptive'))
 
 	class Meta:

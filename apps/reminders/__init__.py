@@ -4,12 +4,12 @@ import datetime
 
 from django.utils.translation import ugettext_lazy as _
 
-from navigation.api import register_links, register_top_menu, \
-    register_model_list_columns, register_multi_item_links
+from navigation.api import (register_links, register_top_menu,
+    register_model_list_columns, register_multi_item_links)
 from common.widgets import two_state_template
 from common.utils import encapsulate
 
-from .models import Reminder, Participant
+from .models import Reminder
 from .permissions import (PERMISSION_REMINDER_VIEW,
     PERMISSION_REMINDER_CREATE, PERMISSION_REMINDER_EDIT,
     PERMISSION_REMINDER_DELETE)
@@ -26,19 +26,12 @@ reminder_view = {'text': _(u'details'), 'view': 'reminder_view', 'args': 'object
 reminder_delete = {'text': _(u'delete'), 'view': 'reminder_delete', 'args': 'object.id', 'famfam': 'hourglass_delete', 'permissions': [PERMISSION_REMINDER_DELETE]}
 reminder_multiple_delete = {'text': _(u'delete'), 'view': 'reminder_multiple_delete', 'famfam': 'hourglass_delete', 'permissions': [PERMISSION_REMINDER_DELETE]}
 
-reminder_participant_add = {'text': _(u'add participant'), 'view': 'participant_add', 'args': 'object.pk', 'famfam': 'user_add', 'permissions': [PERMISSION_REMINDER_EDIT]}
-reminder_participant_remove = {'text': _(u'remove'), 'view': 'participant_remove', 'args': 'object.pk', 'famfam': 'user_delete', 'permissions': [PERMISSION_REMINDER_EDIT]}
-reminder_participant_list = {'text': _(u'participants'), 'view': 'participant_list', 'args': 'object.pk', 'famfam': 'group', 'permissions': [PERMISSION_REMINDER_VIEW]}
-
 group_list = {'text': _(u'group list'), 'view': 'group_list', 'famfam': 'hourglass'}#, 'permissions': [PERMISSION_REMINDER_VIEW]}
-
-register_links(['participant_list'], [reminder_participant_add], menu_name='sidebar')
 
 register_links(
     [
 		'group_list',
         'comments_for_object', 'comment_add', 'comment_delete', 'comment_multiple_delete',
-        'participant_remove', 'reminder_participant_add', 'participant_list',
         'future_expired_remider_list',
         'reminder_view', 'reminder_edit',
         'reminder_edit_days', 'reminder_delete', 'reminder_list',
@@ -55,11 +48,6 @@ register_links([Reminder],
     [reminder_edit, reminder_edit_days, reminder_delete]
 )
 register_links([Reminder], [reminder_view], menu_name='form_header')
-
-register_links([Participant], [reminder_participant_remove])
-
-register_links([Reminder], [reminder_participant_list], menu_name='form_header')
-
 
 register_multi_item_links(
     [
@@ -92,18 +80,6 @@ register_model_list_columns(Reminder, [
         {
             'name': _('expired?'),
             'attribute': encapsulate(lambda x: two_state_template((x.datetime_expire < datetime.datetime.now().date()), monostate=True))
-        }
-    ]
-)
-
-register_model_list_columns(Participant, [
-        {
-            'name': _(u'name'),
-            'attribute': encapsulate(lambda x: x.user.get_full_name() if x.user.get_full_name() else x.user)
-        },
-        {
-            'name': _(u'role'),
-            'attribute': encapsulate(lambda x: x.get_role_display())
         }
     ]
 )
