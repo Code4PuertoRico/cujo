@@ -8,6 +8,7 @@ from navigation.api import (register_links, register_top_menu,
     register_model_list_columns, register_multi_item_links)
 from common.widgets import two_state_template
 from common.utils import encapsulate
+from acls.api import class_permissions
 
 from .models import Reminder
 from .permissions import (PERMISSION_REMINDER_VIEW,
@@ -26,11 +27,11 @@ reminder_view = {'text': _(u'details'), 'view': 'reminder_view', 'args': 'object
 reminder_delete = {'text': _(u'delete'), 'view': 'reminder_delete', 'args': 'object.id', 'famfam': 'hourglass_delete', 'permissions': [PERMISSION_REMINDER_DELETE]}
 reminder_multiple_delete = {'text': _(u'delete'), 'view': 'reminder_multiple_delete', 'famfam': 'hourglass_delete', 'permissions': [PERMISSION_REMINDER_DELETE]}
 
-group_list = {'text': _(u'group list'), 'view': 'group_list', 'famfam': 'hourglass'}#, 'permissions': [PERMISSION_REMINDER_VIEW]}
+reminder_group_list_link = {'text': _(u'group list'), 'view': 'reminder_group_list', 'famfam': 'hourglass'}#, 'permissions': [PERMISSION_REMINDER_VIEW]}
 
 register_links(
     [
-		'group_list',
+		'reminder_group_list',
         'comments_for_object', 'comment_add', 'comment_delete', 'comment_multiple_delete',
         'future_expired_remider_list',
         'reminder_view', 'reminder_edit',
@@ -38,26 +39,41 @@ register_links(
         'expired_remider_list', 'reminder_add',
         'reminder_add_days', 'participant_add'],
     [
-		group_list,
+		reminder_group_list_link,
         reminder_list, expired_remider_list,
         future_expired_remider_list,
+    ], menu_name='secondary_menu'
+)
+
+register_links(
+    [
+		'reminder_group_list',
+        'comments_for_object', 'comment_add', 'comment_delete', 'comment_multiple_delete',
+        'future_expired_remider_list',
+        'reminder_view', 'reminder_edit',
+        'reminder_edit_days', 'reminder_delete', 'reminder_list',
+        'expired_remider_list', 'reminder_add',
+        'reminder_add_days', 'participant_add'],
+    [
         reminder_add, reminder_add_days
     ], menu_name='sidebar'
 )
+
 register_links([Reminder],
     [reminder_edit, reminder_edit_days, reminder_delete]
 )
+
 register_links([Reminder], [reminder_view], menu_name='form_header')
 
-register_multi_item_links(
-    [
-        'reminder_list', 'expired_remider_list',
-        'future_expired_remider_list',
-    ],
-    [
-        reminder_multiple_delete
-    ]
-)
+#register_multi_item_links(
+#    [
+#        'reminder_list', 'expired_remider_list',
+#        'future_expired_remider_list',
+#    ],
+#    [
+#        reminder_multiple_delete
+#    ]
+#)
 
 register_top_menu('reminders',
     link={'famfam': 'hourglass', 'text': _(u'reminders'), 'view': 'reminder_list'},
@@ -83,3 +99,8 @@ register_model_list_columns(Reminder, [
         }
     ]
 )
+
+class_permissions(Reminder, [
+    PERMISSION_REMINDER_VIEW, PERMISSION_REMINDER_CREATE, 
+    PERMISSION_REMINDER_EDIT, PERMISSION_REMINDER_DELETE
+])

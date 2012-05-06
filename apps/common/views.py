@@ -14,6 +14,14 @@ from django.utils.simplejson import dumps, loads
 from django.contrib.auth.views import password_change
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.views.generic import ListView as DjangoListView
+from django.views.generic import CreateView as DjangoCreateView
+from django.views.generic import UpdateView as DjangoUpdateView
+from django.views.generic import DeleteView as DjangoDeleteView
+from django.core.exceptions import PermissionDenied
+
+from permissions.models import Permission
+from acls.models import AccessEntry
 
 from .forms import (ChoiceForm, UserForm, UserForm_view, LicenseForm,
     EmailAuthenticationForm)
@@ -253,3 +261,86 @@ def password_change_done(request):
 
     messages.success(request, _(u'Your password has been successfully changed.'))
     return redirect('current_user_details')
+
+
+class ListView(DjangoListView):
+    template_name = 'generic_list.html'
+
+    def get(self, request, *args, **kwargs):
+        if hasattr(self, 'required_permissions'):
+            try:
+                Permission.objects.check_permissions(request.user, self.required_permissions)
+            except PermissionDenied:
+                final_object_list = AccessEntry.objects.filter_objects_by_access(PERMISSION_DOCUMENT_VIEW, request.user, pre_object_list)
+            
+        return super(ListView, self).get(request, *args, **kwargs)
+        
+    def special_context(self):
+        return {
+            'title': _(u'objects')
+        }
+       
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super(ListView, self).get_context_data(**kwargs)
+
+        # Get specialized context
+        context.update(self.special_context())
+
+        return context
+
+        
+class CreateView(DjangoCreateView):
+    template_name = 'generic_form.html'
+    
+    def get(self, request, *args, **kwargs):
+        if hasattr(self, 'required_permissions'):
+            Permission.objects.check_permissions(request.user, self.required_permissions)
+            
+        return super(CreateView, self).get(request, *args, **kwargs)
+        
+    def post(self, request, *args, **kwargs):
+        if hasattr(self, 'required_permissions'):
+            Permission.objects.check_permissions(request.user, self.required_permissions)
+            
+        return super(CreateView, self).post(request, *args, **kwargs)        
+
+
+class UpdateView(DjangoUpdateView):
+    template_name = 'generic_form.html'
+
+    def get(self, request, *args, **kwargs):
+        if hasattr(self, 'required_permissions'):
+            Permission.objects.check_permissions(request.user, self.required_permissions)
+            
+        return super(UpdateView, self).get(request, *args, **kwargs)
+        
+    def post(self, request, *args, **kwargs):
+        if hasattr(self, 'required_permissions'):
+            Permission.objects.check_permissions(request.user, self.required_permissions)
+            
+        return super(UpdateView, self).post(request, *args, **kwargs)
+
+
+class DeleteView(DjangoDeleteView):
+    template_name = 'generic_confirm.html'
+
+    def delete(self, request, *args, **kwargs):
+        if hasattr(self, 'required_permissions'):
+            Permission.objects.check_permissions(request.user, self.required_permissions)
+            
+        return super(DeleteView, self).delete(request, *args, **kwargs)
+
+    def special_context(self):
+        return {
+            'title': _(u'objects')
+        }
+       
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super(DeleteView, self).get_context_data(**kwargs)
+
+        # Get specialized context
+        context.update(self.special_context())
+
+        return context

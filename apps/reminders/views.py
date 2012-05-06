@@ -8,13 +8,11 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.contrib import messages
 from django.core.urlresolvers import reverse
-from django.core.exceptions import PermissionDenied
 from django.utils import formats
 from django.contrib.auth.models import User
-from django.views.generic import ListView as DjangoListView
-from django.views.generic import CreateView as DjangoCreateView
 
 from common.utils import encapsulate
+from common.views import (ListView, CreateView, UpdateView, DeleteView)
 from permissions.models import Permission
 from acls.models import AccessEntry
 
@@ -23,33 +21,6 @@ from .forms import (ReminderForm, ReminderForm_view,
 from .models import Reminder, Group
 from .permissions import (PERMISSION_REMINDER_VIEW, PERMISSION_REMINDER_CREATE,
     PERMISSION_REMINDER_EDIT, PERMISSION_REMINDER_DELETE)
-
-
-class ListView(DjangoListView):
-    template_name = 'generic_list.html'
-
-    def get(self, request, *args, **kwargs):
-        if hasattr(self, 'required_permissions'):
-            try:
-                Permission.objects.check_permissions(request.user, self.required_permissions)
-            except PermissionDenied:
-                final_object_list = AccessEntry.objects.filter_objects_by_access(PERMISSION_DOCUMENT_VIEW, request.user, pre_object_list)
-            
-        return super(ListView, self).get(request, *args, **kwargs)
-        
-    def special_context(self):
-        return {
-            'title': _(u'objects')
-        }
-       
-    def get_context_data(self, **kwargs):
-        # Call the base implementation first to get a context
-        context = super(ListView, self).get_context_data(**kwargs)
-
-        # Get specialized context
-        context.update(self.special_context())
-
-        return context
 
 
 class ReminderList(ListView):
@@ -66,20 +37,27 @@ class ReminderList(ListView):
         }
 
 
-class CreateView(DjangoCreateView):
-    template_name = 'generic_form.html'
-    
-    def get(self, request, *args, **kwargs):
-        if hasattr(self, 'required_permissions'):
-            Permission.objects.check_permissions(request.user, self.required_permissions)
-            
-        return super(CreateView, self).get(request, *args, **kwargs)
-        
-    def put(self, request, *args, **kwargs):
-        if hasattr(self, 'required_permissions'):
-            Permission.objects.check_permissions(request.user, self.required_permissions)
-            
-        return super(CreateView, self).put(request, *args, **kwargs)        
+class ReminderExpiredList(ReminderList):
+    required_permissions = [PERMISSION_REMINDER_VIEW]
+   
+    def get_queryset(self):
+        self.expiration_date=self.kwargs.get('expiration_date', datetime.datetime.now().date())
+        return Reminder.objects.filter(datetime_expire__lt=self.expiration_date).order_by('datetime_expire')
+
+    def special_context(self):
+        return {
+            'title': _(u'expired reminders to the date: %(date)s') % {
+                'date': formats.date_format(self.expiration_date, u'DATE_FORMAT'),
+                },
+            'multi_select_as_buttons': True,
+            'hide_links': True,
+            'extra_columns': [
+                {
+                    'name': _('days expired'),
+                    'attribute': encapsulate(lambda x: (self.expiration_date - x.datetime_expire).days)
+                }
+            ]
+        }
 
 
 class ReminderAdd(CreateView):
@@ -104,67 +82,72 @@ class ReminderAdd(CreateView):
         messages.success(self.request, _(u'Reminder "%s" created successfully.') % reminder)
                     
         return super(ReminderAdd, self).form_valid(form)
+
+
+class ReminderEdit(UpdateView):
+    required_permissions = [PERMISSION_REMINDER_EDIT]
+    model = Reminder
+
+    def get_success_url(self):
+        return reverse('reminder_list')
+
+    def special_context(self):
+        expired = (datetime.datetime.now().date() - reminder.datetime_expire).days
+        expired_template = _(u'(expired %s days)') % expired
+        return {
+            'title': _(u'Edit reminder "%(reminder)s" %(expired)s') % {
+                'reminder': reminder, 'expired': expired_template if expired > 0 else u''
+            },
+            'object': reminder,                
+        }
+
+    def form_valid(self, form):
+        if self.form_class == ReminderForm_days:
+            reminder = form.save(commit=False)
+            reminder.datetime_expire = reminder.datetime_created + datetime.timedelta(days=int(form.cleaned_data['days']))
+            reminder.save()
+        else:
+            reminder = form.save()
+        messages.success(self.request, _(u'Reminder "%s" edited successfully.') % reminder)
+                    
+        return super(ReminderEdit, self).form_valid(form)
         
 
-def reminder_edit(request, reminder_id, form_class=ReminderForm):
-    try:
-        #Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_EDIT_ALL])
-        reminder = get_object_or_404(Reminder, pk=reminder_id)
-    except PermissionDenied:
-        Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_EDIT])
+class ReminderDelete(DeleteView):
+    required_permissions = [PERMISSION_REMINDER_DELETE]
+    model = Reminder
+
+    def get_success_url(self):
+        return reverse('reminder_list')
+        
+    def special_context(self):
+        context = {
+            'object_name': _(u'reminder'),
+            'delete_view': True,
+            'previous': self.request.POST.get('previous', self.request.GET.get('previous', self.request.META.get('HTTP_REFERER', reverse('reminder_list')))),
+            'form_icon': u'hourglass_delete.png',
+        }
+        #if len(reminders) == 1:
+        #    context['object'] = reminders[0]
+        context['object'] = self.object
+        context['title'] = _(u'Are you sure you wish to delete the reminder "%s"?') % self.object
+        #elif len(reminders) > 1:
+        #    context['title'] = _(u'Are you sure you wish to delete the reminders: %s?') % ', '.join([unicode(d) for d in reminders])        
+        return context
+
+    def delete(self, request, *args, **kwargs):
         try:
-            reminder = get_object_or_404(Reminder.objects.filter(participant__user=request.user).filter(participant__role__in=[PARTICIPANT_ROLE_CREATOR, PARTICIPANT_ROLE_EDITOR]), pk=reminder_id)
-        except Http404:
-            raise PermissionDenied
+            response = super(ReminderDelete, self).delete(request, *args, **kwargs)
+        except Exception, e:
+            messages.error(request, _(u'Error deleting reminder "%(reminder)s"; %(error)s') % {
+                'reminder': self.object, 'error': e
+            })
+        else:
+            messages.success(request, _(u'Reminder "%s" deleted successfully.') % self.object)
+            
+        return response
 
-    next = request.POST.get('next', request.GET.get('next', request.META.get('HTTP_REFERER', u'/')))
-
-    if request.method == 'POST':
-        form = form_class(instance=reminder, data=request.POST)
-        if form.is_valid():
-            if form_class == ReminderForm_days:
-                reminder = form.save(commit=False)
-                reminder.datetime_expire = reminder.datetime_created + datetime.timedelta(days=int(form.cleaned_data['days']))
-                reminder.save()
-            else:
-                reminder = form.save()
-            messages.success(request, _(u'Reminder "%s" edited successfully.') % reminder)
-            return HttpResponseRedirect(reverse('reminder_list'))
-    else:
-        form = form_class(instance=reminder)
-
-    expired = (datetime.datetime.now().date() - reminder.datetime_expire).days
-    expired_template = _(u'(expired %s days)') % expired
-    subtemplates_list = [
-        {
-            'name': 'generic_form_subtemplate.html',
-            'context': {
-            'title': _(u'Edit reminder "%(reminder)s" %(expired)s') % {
-                'reminder': reminder, 'expired': expired_template if expired > 0 else u''},
-                    'form': form,
-            }
-        },
-        #{
-        #    'name': 'generic_list_subtemplate.html',
-        #    'context': {
-        #        'object_list': reminder.participant_set.all(),
-        #        'title': _(u'participants'),
-        #        'hide_link': True,
-        #        'hide_object': True,
-        #    }
-        #},
-    ]
-
-    return render_to_response('generic_form.html', {
-        'title': _(u'Edit reminder "%s"') % reminder,
-        #'form': form,
-        'subtemplates_list': subtemplates_list,
-        'next': next,
-        'object': reminder,
-    },
-    context_instance=RequestContext(request))
-
-
+"""
 def reminder_delete(request, reminder_id=None, reminder_id_list=None):
     Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_DELETE])
     post_action_redirect = None
@@ -223,22 +206,21 @@ def reminder_delete(request, reminder_id=None, reminder_id_list=None):
 
     return render_to_response('generic_confirm.html', context,
         context_instance=RequestContext(request))
-
-
+"""
 def reminder_multiple_delete(request):
     return reminder_delete(
         request, reminder_id_list=request.GET.get('id_list', [])
     )
 
 
-def reminder_view(request, reminder_id):
+def reminder_view(request, pk):
     try:
         #Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW_ALL])
-        reminder = get_object_or_404(Reminder, pk=reminder_id)
+        reminder = get_object_or_404(Reminder, pk=pk)
     except PermissionDenied:
         Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW])
         try:
-            reminder = get_object_or_404(Reminder, pk=reminder_id)
+            reminder = get_object_or_404(Reminder, pk=pk)
         except Http404:
             raise PermissionDenied
 
@@ -269,31 +251,6 @@ def reminder_view(request, reminder_id):
     context_instance=RequestContext(request))
 
 
-def expired_remider_list(request, expiration_date=datetime.datetime.now().date(), view_all=False):
-    if view_all:
-        #Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW_ALL])
-        expired_reminders = Reminder.objects.filter(datetime_expire__lt=expiration_date)
-    else:
-        Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW])
-        expired_reminders = Reminder.objects.filter(participant__user=request.user).filter(datetime_expire__lt=expiration_date)
-
-    return render_to_response('generic_list.html', {
-        'object_list': expired_reminders.order_by('datetime_expire'),
-        'title': _(u'expired reminders to the date: %(date)s %(all)s') % {
-            'date': formats.date_format(expiration_date, u'DATE_FORMAT'),
-            'all': _(u'(all)') if view_all else u''
-            },
-        'multi_select_as_buttons': True,
-        'hide_links': True,
-        'extra_columns': [
-            {
-                'name': _('days expired'),
-                'attribute': encapsulate(lambda x: (expiration_date - x.datetime_expire).days)
-            }
-        ]
-    }, context_instance=RequestContext(request))
-
-
 def future_expired_remider_list(request, view_all=False):
     Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW, PERMISSION_REMINDER_VIEW_ALL])
 
@@ -314,7 +271,7 @@ def future_expired_remider_list(request, view_all=False):
     context_instance=RequestContext(request))
 
 
-def group_list(request):
+def reminder_group_list(request):
     #try:
     #    Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW_ALL])
     #    reminder = get_object_or_404(Reminder, pk=reminder_id)
