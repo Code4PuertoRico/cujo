@@ -29,7 +29,7 @@ __version_info__ = {
     'minor': 3,
     'micro': 0,
     'releaselevel': 'alpha',
-    'serial': 0
+    'serial': 1
 }
 
 
