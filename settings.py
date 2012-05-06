@@ -120,6 +120,7 @@ INSTALLED_APPS = (
 	# 3rd party
 	'south',
     # Common
+    'acls',
     'project_setup',
     'smart_settings',
     'navigation',
