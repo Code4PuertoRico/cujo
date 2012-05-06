@@ -12,6 +12,7 @@ from django.core.exceptions import PermissionDenied
 from django.utils import formats
 from django.contrib.auth.models import User
 from django.views.generic import ListView as DjangoListView
+from django.views.generic import CreateView as DjangoCreateView
 
 from common.utils import encapsulate
 from permissions.models import Permission
@@ -29,13 +30,12 @@ from .utils import get_user_full_name
 class ListView(DjangoListView):
     template_name = 'generic_list.html'
 
-    def get_queryset(self):
+    def get(self, request, *args, **kwargs):
         if hasattr(self, 'required_permissions'):
-            Permission.objects.check_permissions(self.request.user, self.required_permissions)
-        queryset = super(ListView, self).get_queryset()
+            Permission.objects.check_permissions(request.user, self.required_permissions)
+            
+        return super(ListView, self).get(request, *args, **kwargs)
         
-        return queryset
-
     def special_context(self):
         return {
             'title': _(u'objects')
@@ -44,10 +44,10 @@ class ListView(DjangoListView):
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(ListView, self).get_context_data(**kwargs)
-        
+
         # Get specialized context
         context.update(self.special_context())
-        
+
         return context
 
 
@@ -55,8 +55,7 @@ class ReminderList(ListView):
     required_permissions = [PERMISSION_REMINDER_VIEW]
    
     def get_queryset(self):
-        self.queryset = Reminder.objects.filter(participant__user=self.request.user)		
-        return super(ReminderList, self).get_queryset()
+        return Reminder.objects.filter(participant__user=self.request.user)		
 
     def special_context(self):
         return {
@@ -64,41 +63,53 @@ class ReminderList(ListView):
             'multi_select_as_buttons': True,
             'hide_links': True
         }
-       
 
-def reminder_add(request, form_class=ReminderForm):
-    Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_CREATE])
 
-    next = request.POST.get('next', request.GET.get('next', request.META.get('HTTP_REFERER', u'/')))
+class CreateView(DjangoCreateView):
+    template_name = 'generic_form.html'
+    
+    def get(self, request, *args, **kwargs):
+        if hasattr(self, 'required_permissions'):
+            Permission.objects.check_permissions(request.user, self.required_permissions)
+            
+        return super(CreateView, self).get(request, *args, **kwargs)
+        
+    def put(self, request, *args, **kwargs):
+        if hasattr(self, 'required_permissions'):
+            Permission.objects.check_permissions(request.user, self.required_permissions)
+            
+        return super(CreateView, self).put(request, *args, **kwargs)        
 
-    if request.method == 'POST':
-        form = form_class(request.POST)
-        if form.is_valid():
-            if form_class == ReminderForm_days:
-                reminder = form.save(commit=False)
-                reminder.datetime_expire = reminder.datetime_created + datetime.timedelta(days=int(form.cleaned_data['days']))
-                reminder.save()
-            else:
-                reminder = form.save()
 
-            participant = Participant(reminder=reminder, user=request.user, role=PARTICIPANT_ROLE_CREATOR)
-            participant.save()
-            messages.success(request, _(u'Reminder "%s" created successfully.') % reminder)
-            return HttpResponseRedirect(reverse('reminder_list'))
-    else:
-        form = form_class()
+class ReminderAdd(CreateView):
+    required_permissions = [PERMISSION_REMINDER_CREATE]
 
-    return render_to_response('generic_form.html', {
-        'title': _(u'create reminder (%s)') % (_(u'calendar') if form_class == ReminderForm else _(u'days')),
-        'form': form,
-        'next': next,
-    },
-    context_instance=RequestContext(request))
+    def get_success_url(self):
+        return reverse('reminder_list')
 
+    def special_context(self):
+        return {
+            'title': _(u'create reminder (%s)') % (_(u'calendar') if self.form_class == ReminderForm else _(u'days')),
+        }
+
+    def form_valid(self, form):
+        if self.form_class == ReminderForm_days:
+            reminder = form.save(commit=False)
+            reminder.datetime_expire = reminder.datetime_created + datetime.timedelta(days=int(form.cleaned_data['days']))
+            reminder.save()
+        else:
+            reminder = form.save()
+
+        participant = Participant(reminder=reminder, user=self.request.user, role=PARTICIPANT_ROLE_CREATOR)
+        participant.save()
+        messages.success(self.request, _(u'Reminder "%s" created successfully.') % reminder)
+                    
+        return super(ReminderAdd, self).form_valid(form)
+        
 
 def reminder_edit(request, reminder_id, form_class=ReminderForm):
     try:
-        Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_EDIT_ALL])
+        #Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_EDIT_ALL])
         reminder = get_object_or_404(Reminder, pk=reminder_id)
     except PermissionDenied:
         Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_EDIT])
@@ -161,7 +172,7 @@ def reminder_delete(request, reminder_id=None, reminder_id_list=None):
 
     if reminder_id:
         try:
-            Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_DELETE_ALL])
+            #Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_DELETE_ALL])
             reminders = [get_object_or_404(Reminder, pk=reminder_id)]
         except PermissionDenied:
             Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_DELETE])
@@ -223,7 +234,7 @@ def reminder_multiple_delete(request):
 
 def reminder_view(request, reminder_id):
     try:
-        Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW_ALL])
+        #Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW_ALL])
         reminder = get_object_or_404(Reminder, pk=reminder_id)
     except PermissionDenied:
         Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW])
@@ -261,7 +272,7 @@ def reminder_view(request, reminder_id):
 
 def expired_remider_list(request, expiration_date=datetime.datetime.now().date(), view_all=False):
     if view_all:
-        Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW_ALL])
+        #Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW_ALL])
         expired_reminders = Reminder.objects.filter(datetime_expire__lt=expiration_date)
     else:
         Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW])
@@ -306,7 +317,7 @@ def future_expired_remider_list(request, view_all=False):
 
 def participant_add(request, reminder_id):
     try:
-        Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_EDIT_ALL])
+        #Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_EDIT_ALL])
         reminder = get_object_or_404(Reminder, pk=reminder_id)
     except PermissionDenied:
         Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_EDIT])
@@ -345,7 +356,7 @@ def participant_remove(request, participant_id):
     participant = get_object_or_404(Participant, pk=participant_id)
     reminder_id = participant.reminder_id
     try:
-        Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_EDIT_ALL])
+        #Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_EDIT_ALL])
         reminder = get_object_or_404(Reminder, pk=reminder_id)
     except PermissionDenied:
         Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_EDIT])
@@ -383,7 +394,7 @@ def participant_remove(request, participant_id):
 
 def participant_list(request, reminder_id):
     try:
-        Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW_ALL])
+        #Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW_ALL])
         reminder = get_object_or_404(Reminder, pk=reminder_id)
     except PermissionDenied:
         Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW])
