@@ -11,6 +11,7 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
 from django.utils import formats
 from django.contrib.auth.models import User
+from django.views.generic import ListView as DjangoListView
 
 from common.utils import encapsulate
 from permissions.models import Permission
@@ -21,27 +22,49 @@ from .models import Reminder, Participant, Group
 from .literals import (PARTICIPANT_ROLE_CHOICES, PARTICIPANT_ROLE_CREATOR,
     PARTICIPANT_ROLE_EDITOR, PARTICIPANT_ROLE_WATCHER)
 from .permissions import (PERMISSION_REMINDER_VIEW, PERMISSION_REMINDER_CREATE,
-    PERMISSION_REMINDER_EDIT, PERMISSION_REMINDER_DELETE,
-    PERMISSION_REMINDER_VIEW_ALL, PERMISSION_REMINDER_EDIT_ALL,
-    PERMISSION_REMINDER_DELETE_ALL)
+    PERMISSION_REMINDER_EDIT, PERMISSION_REMINDER_DELETE)
 from .utils import get_user_full_name
 
 
-def reminder_list(request, object_list=None, title=None, view_all=False):
-    if view_all:
-        Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW_ALL])
-        query_set = Reminder.objects.all()
-    else:
-        Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_VIEW])
-        query_set = Reminder.objects.filter(participant__user=request.user)
+class ListView(DjangoListView):
+    template_name = 'generic_list.html'
 
-    return render_to_response('generic_list.html', {
-        'object_list': object_list if not (object_list is None) else query_set,
-        'title': title if title else _(u'reminders %s') % (_(u'(all)') if view_all else u''),
-        'multi_select_as_buttons': True,
-        'hide_links': True,
-    }, context_instance=RequestContext(request))
+    def get_queryset(self):
+        if hasattr(self, 'required_permissions'):
+            Permission.objects.check_permissions(self.request.user, self.required_permissions)
+        queryset = super(ListView, self).get_queryset()
+        
+        return queryset
 
+    def special_context(self):
+        return {
+            'title': _(u'objects')
+        }
+       
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super(ListView, self).get_context_data(**kwargs)
+        
+        # Get specialized context
+        context.update(self.special_context())
+        
+        return context
+
+
+class ReminderList(ListView):
+    required_permissions = [PERMISSION_REMINDER_VIEW]
+   
+    def get_queryset(self):
+        self.queryset = Reminder.objects.filter(participant__user=self.request.user)		
+        return super(ReminderList, self).get_queryset()
+
+    def special_context(self):
+        return {
+            'title': _(u'reminders'),
+            'multi_select_as_buttons': True,
+            'hide_links': True
+        }
+       
 
 def reminder_add(request, form_class=ReminderForm):
     Permission.objects.check_permissions(request.user, [PERMISSION_REMINDER_CREATE])
